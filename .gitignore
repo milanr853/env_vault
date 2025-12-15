@@ -1,0 +1,80 @@
+# =========================
+# Node / Package managers
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# =========================
+# Build outputs
+# =========================
+dist/
+dist-electron/
+build/
+out/
+
+# =========================
+# Vite / Cache
+# =========================
+.vite/
+.cache/
+
+# =========================
+# Electron
+# =========================
+release/
+*.asar
+*.asar.unpacked/
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.*
+*.env
+*.vault
+*.secrets
+my-secrets.vault
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/
+*.swp
+*.swo
+*.bak
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Coverage / Testing
+# =========================
+coverage/
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
