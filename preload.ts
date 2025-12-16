@@ -1,11 +1,21 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer } from "electron"
 
+contextBridge.exposeInMainWorld("envVault", {
+    createVault: (vaultPath: string, password: string) =>
+        ipcRenderer.invoke("vault:create", { vaultPath, password }),
 
-contextBridge.exposeInMainWorld('envVault', {
-    createVault: (opts: { path: string, password: string }) => ipcRenderer.invoke('vault:create', opts),
-    unlockVault: (opts: { path: string, password: string }) => ipcRenderer.invoke('vault:unlock', opts),
-    lockVault: () => ipcRenderer.invoke('vault:lock'),
-    importEnvFile: (filePath: string) => ipcRenderer.invoke('vault:importEnv', filePath),
-    runProject: (projectName: string, cmd: string, args: string[]) => ipcRenderer.invoke('runner:run', { projectName, cmd, args }),
-    copyToClipboard: (value: string) => ipcRenderer.invoke('clipboard:copy', value)
+    unlockVault: (vaultPath: string, password: string) =>
+        ipcRenderer.invoke("vault:unlock", { vaultPath, password }),
+
+    lockVault: () =>
+        ipcRenderer.invoke("vault:lock"),
+
+    importEnvFile: (projectName: string, envFilePath: string) =>
+        ipcRenderer.invoke("vault:import-env", { projectName, envFilePath }),
+
+    runProject: (projectName: string, command: string) =>
+        ipcRenderer.invoke("runner:run", { projectName, command }),
+
+    copyToClipboard: (value: string) =>
+        ipcRenderer.invoke("clipboard:copy", value)
 })
