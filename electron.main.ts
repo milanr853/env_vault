@@ -1,6 +1,12 @@
 import { app, BrowserWindow, ipcMain, clipboard } from "electron"
 import path from "path"
 
+const VAULT_PATH = path.join(
+    app.getPath("userData"),
+    "env-vault.vault"
+)
+
+
 // vault crypto helpers
 import { createVault, decryptVault } from "./src-main/vault"
 
@@ -66,26 +72,33 @@ app.on("before-quit", () => {
 // Create new vault
 ipcMain.handle(
     "vault:create",
-    async (_event, { vaultPath, password }) => {
+    async (_event, { password }) => {
         const emptyVault = { projects: {} }
 
-        await createVault(emptyVault, password, vaultPath)
+        await createVault(emptyVault, password, VAULT_PATH)
 
         decryptedVault = emptyVault
-        currentVaultPath = vaultPath
+        currentVaultPath = VAULT_PATH
     }
 )
 
 // Unlock existing vault
 ipcMain.handle(
     "vault:unlock",
-    async (_event, { vaultPath, password }) => {
-        const data = await decryptVault(vaultPath, password)
+    async (_event, { password }) => {
+        try {
+            const data = await decryptVault(VAULT_PATH, password)
 
-        decryptedVault = data
-        currentVaultPath = vaultPath
+            decryptedVault = data
+            currentVaultPath = VAULT_PATH
 
-        return { projects: data.projects }
+            return { ok: true, projects: data.projects }
+        } catch (err) {
+            return {
+                ok: false,
+                error: "Incorrect master password"
+            }
+        }
     }
 )
 
@@ -98,4 +111,12 @@ ipcMain.handle("vault:lock", async () => {
 // Clipboard copy (no UI exposure)
 ipcMain.handle("clipboard:copy", (_event, value: string) => {
     clipboard.writeText(value)
+})
+
+ipcMain.handle("vault:exists", async () => {
+    try {
+        return require("fs").existsSync(VAULT_PATH)
+    } catch {
+        return false
+    }
 })

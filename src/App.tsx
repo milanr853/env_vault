@@ -1,39 +1,129 @@
-export default function App() {
-    return (
-        <div className="flex h-full flex-col">
-            {/* Header */}
-            <header className="border-b bg-white px-6 py-4 shadow-sm">
-                <h1 className="text-lg font-semibold tracking-tight">
-                    🔐 Env Vault
-                </h1>
-                <p className="text-sm text-gray-500">
-                    Local-First Secrets Manager
-                </p>
-            </header>
+import { useEffect, useState } from "react"
 
-            {/* Main */}
-            <main className="flex flex-1 items-center justify-center px-6">
-                <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow">
-                    <h2 className="mb-2 text-xl font-semibold">
-                        Vault Locked
-                    </h2>
+export default function App() {
+    const [checking, setChecking] = useState(true)
+    const [vaultExists, setVaultExists] = useState<boolean | null>(null)
+    const [password, setPassword] = useState("")
+    const [unlocked, setUnlocked] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+
+    useEffect(() => {
+        async function checkVault() {
+            const exists = await window?.envVault?.exists()
+            setVaultExists(exists)
+            setChecking(false)
+        }
+
+        checkVault()
+    }, [])
+
+    // 1️⃣ Still checking vault existence
+    if (checking) {
+        return (
+            <div className="flex h-screen items-center justify-center text-gray-500">
+                Checking vault…
+            </div>
+        )
+    }
+
+    // 2️⃣ Vault is unlocked (HIGHEST PRIORITY)
+    if (unlocked) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <div className="w-full max-w-md rounded-lg border bg-white p-6 shadow">
+                    <h1 className="mb-4 text-xl font-semibold text-green-600">
+                        Vault Unlocked
+                    </h1>
 
                     <p className="mb-6 text-sm text-gray-600">
-                        Enter your master password to unlock your encrypted vault.
+                        Your secrets are decrypted in memory.
                     </p>
 
                     <button
-                        className="w-full rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                        className="w-full rounded bg-red-600 py-2 text-white"
+                        onClick={async () => {
+                            await window.envVault.lockVault()
+                            setUnlocked(false)
+                        }}
                     >
-                        Unlock Vault
+                        Lock Vault
                     </button>
                 </div>
-            </main>
+            </div>
+        )
+    }
 
-            {/* Footer */}
-            <footer className="border-t bg-white px-6 py-3 text-center text-xs text-gray-500">
-                Secrets never leave your machine
-            </footer>
+    // 3️⃣ No vault yet → Create
+    if (!vaultExists) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <div className="w-full max-w-sm rounded-lg border bg-white p-6 shadow">
+                    <h1 className="mb-4 text-xl font-semibold">
+                        Create Vault
+                    </h1>
+
+                    <input
+                        type="password"
+                        placeholder="Master password"
+                        className="mb-4 w-full rounded border px-3 py-2 text-sm"
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+
+                    <button
+                        className="w-full rounded bg-black py-2 text-white"
+                        onClick={async () => {
+                            await window.envVault.createVault(password)
+                            const exists = await window.envVault.exists()
+                            setVaultExists(exists)
+                        }}
+                    >
+                        Create Vault
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // 4️⃣ Vault exists but locked → Unlock
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <div className="w-full max-w-sm rounded-lg border bg-white p-6 shadow">
+                <h1 className="mb-4 text-xl font-semibold">
+                    Unlock Vault
+                </h1>
+
+                <input
+                    type="password"
+                    placeholder="Master password"
+                    className="mb-4 w-full rounded border px-3 py-2 text-sm"
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+
+                {error && (
+                    <div className="mb-3 rounded bg-red-100 px-3 py-2 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
+
+                <button
+                    className="w-full rounded bg-black py-2 text-white"
+                    onClick={async () => {
+                        setError(null)
+                        const result: any = await window.envVault.unlockVault(password)
+                        if (!result?.ok) {
+                            setError(result?.error)
+                            return
+                        }
+                        setUnlocked(true)
+                    }}
+
+                >
+                    Unlock Vault
+                </button>
+
+            </div>
         </div>
     )
+
 }

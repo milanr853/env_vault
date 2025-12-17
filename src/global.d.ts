@@ -6,12 +6,10 @@ declare global {
     interface Window {
         envVault: {
             createVault(
-                vaultPath: string,
                 password: string
             ): Promise<void>
 
             unlockVault(
-                vaultPath: string,
                 password: string
             ): Promise<{ projects: Record<string, any> }>
 
@@ -28,6 +26,8 @@ declare global {
             ): Promise<void>
 
             copyToClipboard(value: string): Promise<void>
+
+            exists(): Promise<boolean>
         }
     }
 }
