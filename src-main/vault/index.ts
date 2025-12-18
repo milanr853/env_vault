@@ -22,12 +22,13 @@ async function ensureSodiumReady(): Promise<void> {
 export async function createVault(
     plaintextJson: object,
     key: Buffer,
+    salt: Buffer,
     outPath: string
 ): Promise<void> {
     await ensureSodiumReady()
 
     // Generate salt for Argon2
-    const salt = Buffer.from(sodium.randombytes_buf(16))
+    // const salt = Buffer.from(sodium.randombytes_buf(16))
 
     // Derive key using Argon2id
     // const key = await argon2.hash(Buffer.from(password), {

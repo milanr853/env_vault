@@ -10,7 +10,7 @@ let vaultKey: Buffer | null = null
 
 
 // vault crypto helpers
-import { createVault, decryptVault } from "./src-main/vault"
+import { createVault, decryptVault, deriveKey } from "./src-main/vault"
 
 // ==============================
 // Linux sandbox workaround
@@ -76,11 +76,20 @@ app.on("before-quit", () => {
 ipcMain.handle(
     "vault:create",
     async (_event, { password }) => {
-        const emptyVault = { projects: {} }
+        const salt = Buffer.from(require("crypto").randomBytes(16))
+        const key = await deriveKey(password, salt)
 
-        await createVault(emptyVault, password, VAULT_PATH)
+        const emptyVault = {
+            projects: {},
+            _meta: {
+                salt: salt.toString("base64")
+            }
+        }
+
+        await createVault(emptyVault, key, salt, VAULT_PATH)
 
         decryptedVault = emptyVault
+        vaultKey = key
         currentVaultPath = VAULT_PATH
     }
 )
@@ -90,13 +99,13 @@ ipcMain.handle(
     "vault:unlock",
     async (_event, { password }) => {
         try {
-            const data = await decryptVault(VAULT_PATH, password)
+            const result = await decryptVault(VAULT_PATH, password)
 
-            decryptedVault = data?.data
-            vaultKey = data?.key
+            decryptedVault = result.data
+            vaultKey = result.key
             currentVaultPath = VAULT_PATH
 
-            return { ok: true, projects: data?.data?.projects }
+            return { ok: true, projects: result.data?.projects }
         } catch (err) {
             return {
                 ok: false,
@@ -214,7 +223,18 @@ ipcMain.handle(
 
         decryptedVault.projects[projectName] = envData
 
-        await createVault(decryptedVault, vaultKey!, currentVaultPath)
+        const salt = Buffer.from(
+            decryptedVault._meta.salt,
+            "base64"
+        )
+
+        await createVault(
+            decryptedVault,
+            vaultKey!,
+            salt,
+            currentVaultPath
+        )
+
 
         return { ok: true }
     }
