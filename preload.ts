@@ -20,4 +20,22 @@ contextBridge.exposeInMainWorld("envVault", {
 
     copyToClipboard: (value: string) =>
         ipcRenderer.invoke("clipboard:copy", value),
+
+    pickProject: () => ipcRenderer.invoke("env:pick-project"),
+
+    scanProject: (projectPath: string) =>
+        ipcRenderer.invoke("env:scan-project", projectPath),
+
+    readEnvFile: (projectPath: string, fileName: string) =>
+        ipcRenderer.invoke("env:read-file", projectPath, fileName),
+
+    saveProjectEnv: (
+        projectName: string,
+        envData: Record<string, string>
+    ) => ipcRenderer.invoke(
+        "vault:save-project-env",
+        projectName,
+        envData
+    ),
+
 })

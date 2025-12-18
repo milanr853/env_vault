@@ -28,6 +28,35 @@ declare global {
             copyToClipboard(value: string): Promise<void>
 
             exists(): Promise<boolean>
+
+            pickProject(): Promise<
+                | { ok: true; path: string }
+                | { ok: false }
+            >
+
+            scanProject(
+                projectPath: string
+            ): Promise<
+                | { ok: true; files: string[] }
+                | { ok: false; error: string }
+            >
+
+            readEnvFile(
+                projectPath: string,
+                fileName: string
+            ): Promise<
+                | { ok: true; data: Record<string, string> }
+                | { ok: false; error: string }
+            >
+
+            saveProjectEnv(
+                projectName: string,
+                envData: Record<string, string>
+            ): Promise<
+                | { ok: true }
+                | { ok: false; error: string }
+            >
+
         }
     }
 }

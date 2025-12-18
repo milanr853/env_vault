@@ -21,7 +21,7 @@ async function ensureSodiumReady(): Promise<void> {
  */
 export async function createVault(
     plaintextJson: object,
-    password: string,
+    key: Buffer,
     outPath: string
 ): Promise<void> {
     await ensureSodiumReady()
@@ -30,11 +30,11 @@ export async function createVault(
     const salt = Buffer.from(sodium.randombytes_buf(16))
 
     // Derive key using Argon2id
-    const key = await argon2.hash(Buffer.from(password), {
-        raw: true,
-        type: argon2.argon2id,
-        salt
-    })
+    // const key = await argon2.hash(Buffer.from(password), {
+    //     raw: true,
+    //     type: argon2.argon2id,
+    //     salt
+    // })
 
     // Generate nonce for XChaCha20-Poly1305
     const nonce = sodium.randombytes_buf(
@@ -79,7 +79,7 @@ export async function createVault(
 export async function decryptVault(
     vaultPath: string,
     password: string
-): Promise<any> {
+): Promise<{ data: any; key: Buffer }> {
     await ensureSodiumReady()
 
     const raw = JSON.parse(readFileSync(vaultPath, "utf8"))
@@ -103,5 +103,18 @@ export async function decryptVault(
         key
     )
 
-    return JSON.parse(Buffer.from(plaintext).toString("utf8"))
+    return { data: JSON.parse(Buffer.from(plaintext).toString("utf8")), key }
+}
+
+export async function deriveKey(
+    password: string,
+    salt?: Buffer
+): Promise<Buffer> {
+    await ensureSodiumReady()
+
+    return argon2.hash(Buffer.from(password), {
+        raw: true,
+        type: argon2.argon2id,
+        salt
+    })
 }
