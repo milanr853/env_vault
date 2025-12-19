@@ -38,4 +38,8 @@ contextBridge.exposeInMainWorld("envVault", {
         envData
     ),
 
+    deleteProject: (projectName: string) =>
+        ipcRenderer.invoke("vault:delete-project", projectName),
+
+
 })

@@ -239,3 +239,32 @@ ipcMain.handle(
         return { ok: true }
     }
 )
+
+ipcMain.handle(
+    "vault:delete-project",
+    async (_event, projectName: string) => {
+        if (!decryptedVault || !currentVaultPath || !vaultKey) {
+            return { ok: false, error: "Vault is locked" }
+        }
+
+        if (!decryptedVault.projects?.[projectName]) {
+            return { ok: false, error: "Project not found" }
+        }
+
+        delete decryptedVault.projects[projectName]
+
+        const salt = Buffer.from(
+            decryptedVault._meta.salt,
+            "base64"
+        )
+
+        await createVault(
+            decryptedVault,
+            vaultKey,
+            salt,
+            currentVaultPath
+        )
+
+        return { ok: true }
+    }
+)

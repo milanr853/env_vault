@@ -57,6 +57,13 @@ declare global {
                 | { ok: false; error: string }
             >
 
+            deleteProject(
+                projectName: string
+            ): Promise<
+                | { ok: true }
+                | { ok: false; error: string }
+            >
+
         }
     }
 }
