@@ -9,6 +9,11 @@ export default function App() {
     const [projects, setProjects] = useState<Record<string, Record<string, string>>>({})
     const [selectedProject, setSelectedProject] = useState<string | null>(null)
     const [copiedKey, setCopiedKey] = useState<string | null>(null)
+    const [pendingProjectPath, setPendingProjectPath] = useState<string | null>(null)
+    const [pendingEnvFiles, setPendingEnvFiles] = useState<string[] | null>(null)
+    const [pendingEnvData, setPendingEnvData] = useState<Record<string, string> | null>(null)
+    const [pendingProjectName, setPendingProjectName] = useState<string | null>(null)
+    const [isImporting, setIsImporting] = useState(false)
 
 
 
@@ -22,6 +27,36 @@ export default function App() {
         checkVault()
     }, [])
 
+    useEffect(() => {
+        if (!pendingProjectPath) return
+
+            ; (async () => {
+                const res = await window.envVault.scanProject(pendingProjectPath)
+                if (!res.ok || res.files.length === 0) {
+                    alert("No .env files found in selected directory")
+                    setIsImporting(false)
+                    setPendingProjectPath(null)
+                    setPendingProjectName(null)
+                    setPendingEnvFiles(null)
+                    setPendingEnvData(null)
+                    return
+                }
+
+                setPendingEnvFiles(res.files)
+            })()
+    }, [pendingProjectPath])
+
+    const projectNames = Object.keys(projects)
+
+    const sidebarProjects = pendingProjectName &&
+        !projectNames.includes(pendingProjectName)
+        ? [...projectNames, pendingProjectName]
+        : projectNames
+
+
+
+
+
     // 1️⃣ Still checking vault existence
     if (checking) {
         return (
@@ -31,43 +66,32 @@ export default function App() {
         )
     }
 
-    // 2️⃣ Vault is unlocked (HIGHEST PRIORITY)
-    // if (unlocked) {
-    //     return (
-    //         <div className="flex h-screen items-center justify-center">
-    //             <div className="w-full max-w-md rounded-lg border bg-white p-6 shadow">
-    //                 <h1 className="mb-4 text-xl font-semibold text-green-600">
-    //                     Vault Unlocked
-    //                 </h1>
-
-    //                 <p className="mb-6 text-sm text-gray-600">
-    //                     Your secrets are decrypted in memory.
-    //                 </p>
-
-    //                 <button
-    //                     className="w-full rounded bg-red-600 py-2 text-white"
-    //                     onClick={async () => {
-    //                         await window.envVault.lockVault()
-    //                         setUnlocked(false)
-    //                         setProjects({})
-    //                         setSelectedProject(null)
-    //                     }}
-    //                 >
-    //                     Lock Vault
-    //                 </button>
-    //             </div>
-    //         </div>
-    //     )
-    // }
-    if (unlocked) {
-        const projectNames = Object.keys(projects)
+    if (unlocked && !isImporting) {
         return (
             <div className="flex h-screen">
                 {/* Left: Projects */}
                 <div className="w-64 border-r bg-gray-50 p-4">
-                    <h2 className="mb-3 text-sm font-semibold text-gray-600">
-                        Projects
-                    </h2>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-sm font-semibold text-gray-600">
+                            Projects
+                        </h2>
+
+                        <button
+                            onClick={async () => {
+                                const res = await window.envVault.pickProject()
+                                if (!res.ok) return
+
+                                setPendingProjectPath(res.path)
+                                setPendingProjectName(res.path.split("/").pop()!)
+                                setIsImporting(true)
+
+                            }}
+                            className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                        >
+                            + Add
+                        </button>
+                    </div>
+
 
                     {projectNames.length === 0 && (
                         <p className="text-sm text-gray-400">
@@ -76,28 +100,39 @@ export default function App() {
                     )}
 
                     <ul className="space-y-1">
-                        {projectNames.map((name) => (
-                            <li key={name}>
+                        {sidebarProjects.map((name) => {
+                            const isPending = pendingProjectName !== null &&
+                                name === pendingProjectName &&
+                                !(name in projects)
+
+                            return (
                                 <button
-                                    onClick={() => setSelectedProject(name)}
-                                    className={`w-full rounded px-3 py-2 text-left text-sm ${selectedProject === name
-                                        ? "bg-blue-600 text-white"
-                                        : "hover:bg-gray-200"
+                                    key={name}
+                                    disabled={isPending}
+                                    className={`mb-2 w-full rounded px-3 py-2 text-left text-sm ${isPending
+                                        ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                                        : selectedProject === name
+                                            ? "bg-blue-600 text-white"
+                                            : "hover:bg-gray-100"
                                         }`}
+                                    onClick={() => {
+                                        if (isPending) return
+                                        setSelectedProject(name)
+                                    }}
                                 >
                                     {name}
+                                    {isPending && (
+                                        <span className="ml-2 text-xs italic">
+                                            (pending)
+                                        </span>
+                                    )}
                                 </button>
-                            </li>
-                        ))}
+                            )
+                        })}
+
                     </ul>
                 </div>
 
-                {/* Right: Placeholder */}
-                {/* <div className="flex-1 p-6">
-                    <p className="text-gray-400">
-                        Select a project to view secrets
-                    </p>
-                </div> */}
                 <div className="flex-1 p-6">
                     {!selectedProject && (
                         <p className="text-gray-400">
@@ -117,7 +152,6 @@ export default function App() {
                                         Working directory: <span className="italic">not selected</span>
                                     </p>
                                 </div>
-
 
                                 <button
                                     onClick={async () => {
@@ -150,19 +184,6 @@ export default function App() {
                             <ul className="space-y-2">
                                 {Object.keys(projects[selectedProject] || {}).map(
                                     (key) => (
-                                        // <li
-                                        //     key={key}
-                                        //     className="flex items-center justify-between rounded border px-3 py-2"
-                                        // >
-                                        //     <span className="font-mono text-sm">
-                                        //         {key}
-                                        //     </span>
-
-                                        //     {/* Value is intentionally hidden */}
-                                        //     <span className="text-xs text-gray-400">
-                                        //         ●●●●●●
-                                        //     </span>
-                                        // </li>
                                         <li
                                             key={key}
                                             className="flex items-center justify-between rounded border px-3 py-2"
@@ -201,7 +222,6 @@ export default function App() {
         )
     }
 
-
     // 3️⃣ No vault yet → Create
     if (!vaultExists) {
         return (
@@ -235,45 +255,130 @@ export default function App() {
 
     // 4️⃣ Vault exists but locked → Unlock
     return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="w-full max-w-sm rounded-lg border bg-white p-6 shadow">
-                <h1 className="mb-4 text-xl font-semibold">
-                    Unlock Vault
-                </h1>
+        <>
+            {/* 🟡 STEP A3 / A4 — Import Flow */}
+            {isImporting && (
+                <div className="flex h-screen items-center justify-center bg-gray-50">
+                    {pendingEnvFiles && (
+                        <>
+                            <h3 className="mb-2 text-sm font-semibold">
+                                Select env file
+                            </h3>
 
-                <input
-                    type="password"
-                    placeholder="Master password"
-                    className="mb-4 w-full rounded border px-3 py-2 text-sm"
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                            {pendingEnvFiles.map((file) => (
+                                <button
+                                    key={file}
+                                    className="mb-2 block w-full rounded border px-3 py-2 text-left hover:bg-gray-100"
+                                    onClick={async () => {
+                                        const res = await window.envVault.readEnvFile(
+                                            pendingProjectPath!,
+                                            file
+                                        )
 
-                {error && (
-                    <div className="mb-3 rounded bg-red-100 px-3 py-2 text-sm text-red-700">
-                        {error}
+                                        if (!res.ok) {
+                                            alert(res.error)
+                                            return
+                                        }
+
+                                        setPendingEnvData(res.data)
+                                        setPendingEnvFiles(null)
+                                    }}
+                                >
+                                    {file}
+                                </button>
+                            ))}
+                        </>
+                    )}
+
+                    {pendingEnvData && (
+                        <>
+                            <h3 className="mb-2 font-semibold">
+                                Import project?
+                            </h3>
+
+                            <p className="mb-4 text-sm text-gray-600">
+                                {Object.keys(pendingEnvData).length} variables detected
+                            </p>
+
+                            <button
+                                className="rounded bg-green-600 px-4 py-2 text-white"
+                                onClick={async () => {
+                                    const projectName =
+                                        pendingProjectPath!.split("/").pop()!
+
+                                    const res =
+                                        await window.envVault.saveProjectEnv(
+                                            projectName,
+                                            pendingEnvData
+                                        )
+
+                                    if (!res.ok) {
+                                        alert(res.error)
+                                        return
+                                    }
+
+                                    setProjects((p) => ({
+                                        ...p,
+                                        [projectName]: pendingEnvData
+                                    }))
+
+                                    setIsImporting(false)
+                                    setPendingProjectPath(null)
+                                    setPendingProjectName(null)
+                                    setPendingEnvFiles(null)
+                                    setPendingEnvData(null)
+                                }}
+                            >
+                                Import Project
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* 🔒 Vault locked → Unlock UI */}
+            {!pendingEnvFiles && !pendingEnvData && !unlocked && (
+                <div className="flex h-screen items-center justify-center">
+                    <div className="w-full max-w-sm rounded-lg border bg-white p-6 shadow">
+                        <h1 className="mb-4 text-xl font-semibold">
+                            Unlock Vault
+                        </h1>
+
+                        <input
+                            type="password"
+                            placeholder="Master password"
+                            className="mb-4 w-full rounded border px-3 py-2 text-sm"
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+
+                        {error && (
+                            <div className="mb-3 rounded bg-red-100 px-3 py-2 text-sm text-red-700">
+                                {error}
+                            </div>
+                        )}
+
+                        <button
+                            className="w-full rounded bg-black py-2 text-white"
+                            onClick={async () => {
+                                setError(null)
+                                const result: any =
+                                    await window.envVault.unlockVault(password)
+
+                                if (!result?.ok) {
+                                    setError(result?.error)
+                                    return
+                                }
+
+                                setUnlocked(true)
+                                setProjects(result.projects)
+                                setSelectedProject(null)
+                            }}
+                        >
+                            Unlock Vault
+                        </button>
                     </div>
-                )}
-
-                <button
-                    className="w-full rounded bg-black py-2 text-white"
-                    onClick={async () => {
-                        setError(null)
-                        const result: any = await window.envVault.unlockVault(password)
-                        if (!result?.ok) {
-                            setError(result?.error)
-                            return
-                        }
-                        setUnlocked(true)
-                        setProjects(result.projects)
-                        setSelectedProject(null)
-                    }}
-
-                >
-                    Unlock Vault
-                </button>
-
-            </div>
-        </div>
+                </div>
+            )}
+        </>
     )
-
 }
