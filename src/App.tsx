@@ -183,11 +183,11 @@ export default function App() {
                                             delete copy[selectedProject]
                                             return copy
                                         })
-
                                         const copy = { ...projects }
                                         delete copy[selectedProject]
                                         setProjects(copy)
                                         setSelectedProject(null)
+
                                     }}
                                 >
                                     <FiTrash2 />

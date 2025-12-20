@@ -69,7 +69,6 @@ declare global {
             // }>
 
             stopProject(projectName: string): Promise<void>
-
         }
     }
 }

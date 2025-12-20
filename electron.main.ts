@@ -133,9 +133,12 @@ ipcMain.handle("vault:lock", async () => {
     }
 
     runningProcesses.clear()
+
     decryptedVault = null
     vaultKey = null
     currentVaultPath = null
+
+    return { ok: true }
 })
 
 
@@ -264,23 +267,22 @@ ipcMain.handle(
             return { ok: false, error: "Vault is locked" }
         }
 
+        // 🔥 STOP PROCESS IF RUNNING
+        const proc = runningProcesses.get(projectName)
+        if (proc) {
+            proc.kill("SIGTERM")
+            runningProcesses.delete(projectName)
+        }
+
         if (!decryptedVault.projects?.[projectName]) {
             return { ok: false, error: "Project not found" }
         }
 
         delete decryptedVault.projects[projectName]
 
-        const salt = Buffer.from(
-            decryptedVault._meta.salt,
-            "base64"
-        )
+        const salt = Buffer.from(decryptedVault._meta.salt, "base64")
 
-        await createVault(
-            decryptedVault,
-            vaultKey,
-            salt,
-            currentVaultPath
-        )
+        await createVault(decryptedVault, vaultKey, salt, currentVaultPath)
 
         return { ok: true }
     }
