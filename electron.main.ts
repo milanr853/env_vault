@@ -306,10 +306,10 @@ ipcMain.handle(
             return { ok: false, error: "Project already running" }
         }
 
-        // Split command safely
         const [cmd, ...args] = command.split(" ")
 
         const child: any = spawn(cmd, args, {
+            cwd: process.cwd(), // ← SAFE DEFAULT (same as before)
             env: {
                 ...process.env,
                 ...projectEnv
