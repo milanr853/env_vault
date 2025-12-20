@@ -25,9 +25,10 @@ export default function App() {
     const [importState, setImportState] = useState<ImportState>(null)
 
     const [runCommand, setRunCommand] = useState("")
-    const [isRunning, setIsRunning] = useState(false)
     const [runError, setRunError] = useState<string | null>(null)
 
+    // ✅ STEP A — per-project run state
+    const [runningProjects, setRunningProjects] = useState<Record<string, boolean>>({})
 
     /* ───────── Initial vault check ───────── */
 
@@ -138,10 +139,6 @@ export default function App() {
                     </button>
                 </div>
 
-                {Object.keys(projects).length === 0 && (
-                    <p className="text-sm text-gray-400">No projects yet</p>
-                )}
-
                 <ul className="space-y-1">
                     {Object.keys(projects).map((name) => (
                         <li key={name}>
@@ -165,111 +162,135 @@ export default function App() {
                     <p className="text-gray-400">Select a project to view secrets</p>
                 )}
 
-                {selectedProject && (
-                    <>
-                        <div className="mb-4 flex items-center justify-between">
-                            <h1 className="text-lg font-semibold">{selectedProject}</h1>
+                {selectedProject && (() => {
+                    const isRunning = !!runningProjects[selectedProject]
 
-                            <button
-                                className="text-red-600 hover:text-red-700"
-                                onClick={async () => {
-                                    const ok = confirm(`Delete project "${selectedProject}"?`)
-                                    if (!ok) return
+                    return (
+                        <>
+                            <div className="mb-4 flex items-center justify-between">
+                                <h1 className="text-lg font-semibold">{selectedProject}</h1>
 
-                                    await window.envVault.deleteProject(selectedProject)
-                                    const copy = { ...projects }
-                                    delete copy[selectedProject]
-                                    setProjects(copy)
-                                    setSelectedProject(null)
-                                }}
-                            >
-                                <FiTrash2 />
-                            </button>
-                        </div>
-
-                        {/* ───── Run Project ───── */}
-                        <div className="mb-4 rounded-lg border bg-gray-50 p-4">
-                            <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                Run command
-                            </label>
-
-                            <input
-                                type="text"
-                                placeholder="npm run dev"
-                                value={runCommand}
-                                onChange={(e) => setRunCommand(e.target.value)}
-                                className="mb-3 w-full rounded border px-3 py-2 text-sm"
-                            />
-
-                            {runError && (
-                                <div className="mb-2 text-xs text-red-600">
-                                    {runError}
-                                </div>
-                            )}
-
-                            {!isRunning ? (
                                 <button
-                                    className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+                                    className="text-red-600 hover:text-red-700"
                                     onClick={async () => {
-                                        setRunError(null)
+                                        const ok = confirm(`Delete project "${selectedProject}"?`)
+                                        if (!ok) return
 
-                                        if (!runCommand.trim()) {
-                                            setRunError("Command required")
-                                            return
-                                        }
+                                        await window.envVault.deleteProject(selectedProject)
 
-                                        const res: any = await window.envVault.runProject(
-                                            selectedProject,
-                                            runCommand
-                                        )
+                                        setRunningProjects((p) => {
+                                            const copy = { ...p }
+                                            delete copy[selectedProject]
+                                            return copy
+                                        })
 
-                                        if (!res?.ok) {
-                                            setRunError(res?.error)
-                                            return
-                                        }
-
-                                        setIsRunning(true)
+                                        const copy = { ...projects }
+                                        delete copy[selectedProject]
+                                        setProjects(copy)
+                                        setSelectedProject(null)
                                     }}
                                 >
-                                    ▶ Run
+                                    <FiTrash2 />
                                 </button>
-                            ) : (
-                                <button
-                                    className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-                                    onClick={async () => {
-                                        await window.envVault?.stopProject(selectedProject)
-                                        setIsRunning(false)
-                                    }}
-                                >
-                                    ■ Stop
-                                </button>
-                            )}
-                        </div>
+                            </div>
 
-                        <ul className="space-y-2">
-                            {Object.entries(projects[selectedProject]).map(([key, value]) => (
-                                <li
-                                    key={key}
-                                    className="flex items-center justify-between rounded border bg-white px-3 py-2"
-                                >
-                                    <span className="font-mono text-sm">{key}</span>
+                            {/* ───── Run Project ───── */}
+                            <div className="mb-4 rounded-lg border bg-gray-50 p-4">
+                                <label className="mb-1 block text-xs font-semibold text-gray-600">
+                                    Run command
+                                </label>
 
+                                <input
+                                    type="text"
+                                    placeholder="npm run dev"
+                                    value={runCommand}
+                                    onChange={(e) => setRunCommand(e.target.value)}
+                                    className="mb-3 w-full rounded border px-3 py-2 text-sm"
+                                />
+
+                                {runError && (
+                                    <div className="mb-2 text-xs text-red-600">
+                                        {runError}
+                                    </div>
+                                )}
+
+                                {!isRunning ? (
                                     <button
-                                        className="flex items-center gap-1 text-xs text-gray-600 hover:text-black"
+                                        className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
                                         onClick={async () => {
-                                            await window.envVault.copyToClipboard(value)
-                                            setCopiedKey(key)
-                                            setTimeout(() => setCopiedKey(null), 1200)
+                                            setRunError(null)
+
+                                            if (!runCommand.trim()) {
+                                                setRunError("Command required")
+                                                return
+                                            }
+
+                                            const res: any =
+                                                await window.envVault.runProject(
+                                                    selectedProject,
+                                                    runCommand
+                                                )
+
+                                            if (!res?.ok) {
+                                                setRunError(res?.error)
+                                                return
+                                            }
+
+                                            setRunningProjects((p) => ({
+                                                ...p,
+                                                [selectedProject]: true
+                                            }))
                                         }}
                                     >
-                                        <FiCopy />
-                                        {copiedKey === key ? "Copied" : "Copy"}
+                                        ▶ Run
                                     </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </>
-                )}
+                                ) : (
+                                    <button
+                                        className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                                        onClick={async () => {
+                                            await window.envVault.stopProject(selectedProject)
+
+                                            setRunningProjects((p) => ({
+                                                ...p,
+                                                [selectedProject]: false
+                                            }))
+                                        }}
+                                    >
+                                        ■ Stop
+                                    </button>
+                                )}
+                            </div>
+
+                            <ul className="space-y-2">
+                                {Object.entries(projects[selectedProject]).map(
+                                    ([key, value]) => (
+                                        <li
+                                            key={key}
+                                            className="flex items-center justify-between rounded border bg-white px-3 py-2"
+                                        >
+                                            <span className="font-mono text-sm">{key}</span>
+
+                                            <button
+                                                className="flex items-center gap-1 text-xs text-gray-600 hover:text-black"
+                                                onClick={async () => {
+                                                    await window.envVault.copyToClipboard(value)
+                                                    setCopiedKey(key)
+                                                    setTimeout(
+                                                        () => setCopiedKey(null),
+                                                        1200
+                                                    )
+                                                }}
+                                            >
+                                                <FiCopy />
+                                                {copiedKey === key ? "Copied" : "Copy"}
+                                            </button>
+                                        </li>
+                                    )
+                                )}
+                            </ul>
+                        </>
+                    )
+                })()}
             </main>
 
             {/* Import Modal */}
