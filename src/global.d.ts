@@ -63,6 +63,12 @@ declare global {
                 | { ok: true }
                 | { ok: false; error: string }
             >
+            // runProject(projectName: string, command: string): Promise<{
+            //     ok: boolean
+            //     error?: string
+            // }>
+
+            stopProject(projectName: string): Promise<void>
 
         }
     }

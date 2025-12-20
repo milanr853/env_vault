@@ -24,6 +24,11 @@ export default function App() {
 
     const [importState, setImportState] = useState<ImportState>(null)
 
+    const [runCommand, setRunCommand] = useState("")
+    const [isRunning, setIsRunning] = useState(false)
+    const [runError, setRunError] = useState<string | null>(null)
+
+
     /* ───────── Initial vault check ───────── */
 
     useEffect(() => {
@@ -180,6 +185,65 @@ export default function App() {
                             >
                                 <FiTrash2 />
                             </button>
+                        </div>
+
+                        {/* ───── Run Project ───── */}
+                        <div className="mb-4 rounded-lg border bg-gray-50 p-4">
+                            <label className="mb-1 block text-xs font-semibold text-gray-600">
+                                Run command
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="npm run dev"
+                                value={runCommand}
+                                onChange={(e) => setRunCommand(e.target.value)}
+                                className="mb-3 w-full rounded border px-3 py-2 text-sm"
+                            />
+
+                            {runError && (
+                                <div className="mb-2 text-xs text-red-600">
+                                    {runError}
+                                </div>
+                            )}
+
+                            {!isRunning ? (
+                                <button
+                                    className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+                                    onClick={async () => {
+                                        setRunError(null)
+
+                                        if (!runCommand.trim()) {
+                                            setRunError("Command required")
+                                            return
+                                        }
+
+                                        const res: any = await window.envVault.runProject(
+                                            selectedProject,
+                                            runCommand
+                                        )
+
+                                        if (!res?.ok) {
+                                            setRunError(res?.error)
+                                            return
+                                        }
+
+                                        setIsRunning(true)
+                                    }}
+                                >
+                                    ▶ Run
+                                </button>
+                            ) : (
+                                <button
+                                    className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                                    onClick={async () => {
+                                        await window.envVault?.stopProject(selectedProject)
+                                        setIsRunning(false)
+                                    }}
+                                >
+                                    ■ Stop
+                                </button>
+                            )}
                         </div>
 
                         <ul className="space-y-2">

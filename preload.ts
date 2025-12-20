@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld("envVault", {
         ipcRenderer.invoke("vault:import-env", { projectName, envFilePath }),
 
     runProject: (projectName: string, command: string) =>
-        ipcRenderer.invoke("runner:run", { projectName, command }),
+        ipcRenderer.invoke("project:run", { projectName, command }),
 
     copyToClipboard: (value: string) =>
         ipcRenderer.invoke("clipboard:copy", value),
@@ -41,5 +41,6 @@ contextBridge.exposeInMainWorld("envVault", {
     deleteProject: (projectName: string) =>
         ipcRenderer.invoke("vault:delete-project", projectName),
 
-
+    stopProject: (project: string) =>
+        ipcRenderer.invoke("project:stop", project)
 })

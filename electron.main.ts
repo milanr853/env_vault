@@ -1,5 +1,11 @@
 import { app, BrowserWindow, ipcMain, clipboard } from "electron"
 import path from "path"
+import { spawn, ChildProcessWithoutNullStreams } from "child_process"
+
+// ==============================
+// Running project processes
+// ==============================
+const runningProcesses = new Map<string, ChildProcessWithoutNullStreams>()
 
 const VAULT_PATH = path.join(
     app.getPath("userData"),
@@ -63,10 +69,15 @@ app.on("window-all-closed", () => {
 
 // 🔒 Memory wipe on quit
 app.on("before-quit", () => {
+    for (const proc of runningProcesses.values()) {
+        proc.kill("SIGTERM")
+    }
+
+    runningProcesses.clear()
     decryptedVault = null
-    currentVaultPath = null
     vaultKey = null
 })
+
 
 // ==============================
 // IPC HANDLERS
@@ -117,10 +128,16 @@ ipcMain.handle(
 
 // Lock vault (wipe memory)
 ipcMain.handle("vault:lock", async () => {
+    for (const proc of runningProcesses.values()) {
+        proc.kill("SIGTERM")
+    }
+
+    runningProcesses.clear()
     decryptedVault = null
-    currentVaultPath = null
     vaultKey = null
+    currentVaultPath = null
 })
+
 
 // Clipboard copy (no UI exposure)
 ipcMain.handle("clipboard:copy", (_event, value: string) => {
@@ -268,3 +285,58 @@ ipcMain.handle(
         return { ok: true }
     }
 )
+
+ipcMain.handle(
+    "project:run",
+    async (
+        _event,
+        { projectName, command }: { projectName: string; command: string }
+    ) => {
+        if (!decryptedVault || !vaultKey) {
+            return { ok: false, error: "Vault is locked" }
+        }
+
+        const projectEnv = decryptedVault.projects?.[projectName]
+
+        if (!projectEnv) {
+            return { ok: false, error: "Project not found" }
+        }
+
+        if (runningProcesses.has(projectName)) {
+            return { ok: false, error: "Project already running" }
+        }
+
+        // Split command safely
+        const [cmd, ...args] = command.split(" ")
+
+        const child: any = spawn(cmd, args, {
+            env: {
+                ...process.env,
+                ...projectEnv
+            },
+            stdio: "inherit",
+            shell: true
+        })
+
+        runningProcesses.set(projectName, child)
+
+        child.on("exit", () => {
+            runningProcesses.delete(projectName)
+        })
+
+        return { ok: true }
+    }
+)
+
+ipcMain.handle("project:stop", async (_event, projectName: string) => {
+    const proc = runningProcesses.get(projectName)
+
+    if (!proc) {
+        return { ok: false, error: "Project not running" }
+    }
+
+    proc.kill("SIGTERM")
+    runningProcesses.delete(projectName)
+
+    return { ok: true }
+})
