@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "main": "dist-electron/main.js",
+    "type": "module",
     "scripts": {
         "dev": "vite",
         "electron:dev": "ELECTRON_DISABLE_SANDBOX=1 concurrently -k \"vite\" \"tsc -p tsconfig.electron.json --watch\" \"wait-on dist-electron/main.js && electron dist-electron/main.js\"",
