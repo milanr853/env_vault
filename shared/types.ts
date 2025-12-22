@@ -36,10 +36,18 @@ export type SearchMatch = {
 export type ElectronAPI = {
     selectFolders(): Promise<string[]>
     search(query: string): Promise<SearchMatch[]>
+    extractCode(fileId: FileID, startLine: number, endLine: number): Promise<string>
+    injectCode(targetPath: string, code: string): Promise<InjectResult>
 }
+
 
 export type ExtractCodeParams = {
     fileId: FileID
     startLine: number
     endLine: number
+}
+
+export type InjectResult = {
+    success: boolean
+    backupPath: string
 }

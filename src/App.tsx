@@ -4,6 +4,7 @@ import { SearchResults } from './components/SearchResults'
 import { CodeClipboard } from './components/CodeClipboard'
 import { detectLanguage } from './utils/lang'
 import type { SearchMatch } from '@shared/types'
+import { InjectPanel } from './components/InjectPanel'
 
 export default function App() {
     const [query, setQuery] = useState('')
@@ -44,10 +45,13 @@ export default function App() {
             {/* RIGHT: Code Clipboard */}
             <div className="flex-1 p-4">
                 {selected ? (
-                    <CodeClipboard
-                        code={code}
-                        language={detectLanguage(selected.filePath)}
-                    />
+                    <>
+                        <CodeClipboard
+                            code={code}
+                            language={detectLanguage(selected.filePath)}
+                        />
+                        <InjectPanel code={code} />
+                    </>
                 ) : (
                     <div className="text-gray-400">
                         Select a result to view code

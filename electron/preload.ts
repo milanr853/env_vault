@@ -10,5 +10,9 @@ contextBridge.exposeInMainWorld('api', {
         fileId: number,
         start: number,
         end: number
-    ) => ipcRenderer.invoke('code:extract', fileId, start, end)
+    ) => ipcRenderer.invoke('code:extract', fileId, start, end),
+
+    injectCode: (targetPath: string, code: string) =>
+        ipcRenderer.invoke('code:inject', { targetPath, code })
+
 })
