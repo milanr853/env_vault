@@ -1,12 +1,12 @@
 declare module "*.css";
 
+import type { ElectronAPI } from '@shared'
+
 export { }
 
 declare global {
     interface Window {
-        api: {
-            selectFolders: () => Promise<string[]>
-        }
+        api: ElectronAPI
     }
 }
 

@@ -1,6 +1,6 @@
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
-import { SymbolEntry } from '@shared/types'
+import type { SymbolEntry } from '@shared/types'
 
 export function extractSymbols(
     code: string,

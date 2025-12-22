@@ -37,3 +37,9 @@ export type ElectronAPI = {
     selectFolders(): Promise<string[]>
     search(query: string): Promise<SearchMatch[]>
 }
+
+export type ExtractCodeParams = {
+    fileId: FileID
+    startLine: number
+    endLine: number
+}

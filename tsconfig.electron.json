@@ -1,17 +1,20 @@
 {
-    "extends": "./tsconfig.json",
     "compilerOptions": {
+        "target": "ES2022",
         "module": "CommonJS",
-        "outDir": "dist/electron",
+        "moduleResolution": "Node",
         "baseUrl": ".",
+        "outDir": "dist/electron",
         "paths": {
             "@shared/*": [
                 "shared/*"
             ]
-        }
+        },
+        "types": [
+            "node",
+            "electron"
+        ],
+        "strict": true,
+        "skipLibCheck": true
     },
-    "include": [
-        "electron",
-        "shared"
-    ]
 }

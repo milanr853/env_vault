@@ -1,5 +1,5 @@
+import { SearchMatch } from '@shared/types'
 import { useEffect, useState } from 'react'
-import { SearchMatch } from '../../electron/indexer/search.types'
 
 export function useSearch(query: string) {
     const [results, setResults] = useState<SearchMatch[]>([])
