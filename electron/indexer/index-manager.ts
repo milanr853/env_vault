@@ -1,5 +1,4 @@
-import fs from 'node:fs'
-import crypto from 'node:crypto'
+import fs from 'node:fs'import * as crypto from 'node:crypto'
 import { scanFiles } from './file-scanner'
 import { extractSymbols } from './ast-extractor'
 import { trigrams } from './trigram'

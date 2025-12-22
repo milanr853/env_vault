@@ -1,6 +1,4 @@
-import fs from 'node:fs'
-import path from 'node:path'
-
+import fs from 'node:fs'import path from 'node:path'
 const ALLOWED_EXT = new Set(['.js', '.ts', '.jsx', '.tsx'])
 
 export function scanFiles(dir: string, out: string[] = []): string[] {

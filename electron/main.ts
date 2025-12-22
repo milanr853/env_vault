@@ -1,6 +1,5 @@
 import { app, BrowserWindow } from 'electron'
-import path from 'node:path'
-import './ipc'
+import path from 'node:path'import './ipc'
 
 function createWindow() {
     const win = new BrowserWindow({
