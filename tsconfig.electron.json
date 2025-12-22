@@ -3,18 +3,26 @@
         "target": "ES2022",
         "module": "CommonJS",
         "moduleResolution": "Node",
+        "outDir": "dist-electron",
         "baseUrl": ".",
-        "outDir": "dist/electron",
-        "paths": {
-            "@shared/*": [
-                "shared/*"
-            ]
-        },
         "types": [
             "node",
             "electron"
         ],
         "strict": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "paths": {
+            "@shared/*": [
+                "shared/*"
+            ]
+        }
     },
+    "include": [
+        "electron",
+        "shared"
+    ],
+    "exclude": [
+        "src"
+    ]
 }
