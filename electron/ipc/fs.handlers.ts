@@ -1,5 +1,4 @@
 import { ipcMain, dialog } from 'electron'
-import { indexWorker } from './worker-instance'
 
 ipcMain.handle('fs:select-folders', async () => {
     console.log('[FS] select-folders handler invoked')
@@ -8,14 +7,9 @@ ipcMain.handle('fs:select-folders', async () => {
         properties: ['openDirectory', 'multiSelections'],
     })
 
-    if (result.canceled || !result.filePaths.length) {
+    if (result.canceled || result.filePaths.length === 0) {
         return []
     }
-
-    indexWorker.postMessage({
-        type: 'build',
-        paths: result.filePaths,
-    })
 
     return result.filePaths
 })

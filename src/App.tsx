@@ -20,6 +20,8 @@ export default function App() {
 
     const importProjects = async () => {
         const paths = await window.api.selectFolders()
+        console.log('Imported paths:', paths)
+
         if (paths.length) {
             dispatch(addProjects(paths))
         }
