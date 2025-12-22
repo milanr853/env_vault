@@ -1,18 +1,17 @@
-import fs from 'node:fs';
-import * as crypto from 'node:crypto'
+import * as fs from 'node:fs'
 import { scanFiles } from './file-scanner'
 import { extractSymbols } from './ast-extractor'
 import { trigrams } from './trigram'
-import { IndexStore } from '@shared/types'
+import type { IndexStore } from '@shared/types'
 
 const CACHE_PATH = 'index-cache.json'
 
-export class IndexManager {
+class IndexManager {
     store: IndexStore = {
         files: new Map(),
         tokenIndex: new Map(),
         symbolIndex: new Map(),
-        trigramIndex: new Map()
+        trigramIndex: new Map(),
     }
 
     private nextFileId = 1
@@ -33,7 +32,7 @@ export class IndexManager {
                     path: filePath,
                     size: stat.size,
                     mtime: stat.mtimeMs,
-                    lines
+                    lines,
                 })
 
                 const symbols = extractSymbols(code, fileId)
@@ -69,7 +68,7 @@ export class IndexManager {
             files: [...this.store.files],
             tokenIndex: [...this.store.tokenIndex].map(([k, v]) => [k, [...v]]),
             symbolIndex: [...this.store.symbolIndex],
-            trigramIndex: [...this.store.trigramIndex].map(([k, v]) => [k, [...v]])
+            trigramIndex: [...this.store.trigramIndex].map(([k, v]) => [k, [...v]]),
         })
 
         fs.writeFileSync(CACHE_PATH, serialized)
@@ -92,3 +91,5 @@ export class IndexManager {
         return true
     }
 }
+
+export const indexManager = new IndexManager()

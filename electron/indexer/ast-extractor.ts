@@ -6,48 +6,58 @@ export function extractSymbols(
     code: string,
     fileId: number
 ): SymbolEntry[] {
-    const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript', 'jsx']
-    })
+    let ast
+
+    try {
+        ast = parse(code, {
+            sourceType: 'module',
+            plugins: [
+                'typescript',
+                'jsx',
+                'classProperties',
+                'classPrivateProperties',
+                'classPrivateMethods',
+                'decorators-legacy',
+                'dynamicImport',
+                'topLevelAwait',
+                'exportDefaultFrom',
+                'exportNamespaceFrom',
+            ],
+            errorRecovery: true,
+            allowAwaitOutsideFunction: true,
+            allowReturnOutsideFunction: true,
+        })
+    } catch {
+        // 🚨 CRITICAL: skip unparsable file
+        return []
+    }
 
     const symbols: SymbolEntry[] = []
 
     traverse(ast, {
         FunctionDeclaration(path) {
-            if (!path.node.id) return
-            symbols.push({
-                name: path.node.id.name,
-                fileId,
-                startLine: path.node.loc!.start.line,
-                endLine: path.node.loc!.end.line,
-                kind: 'function'
-            })
-        },
-
-        VariableDeclarator(path) {
-            const id = path.node.id
-            if (id.type !== 'Identifier') return
-
-            symbols.push({
-                name: id.name,
-                fileId,
-                startLine: path.node.loc!.start.line,
-                endLine: path.node.loc!.end.line,
-                kind: 'variable'
-            })
+            if (path.node.id?.name) {
+                symbols.push({
+                    name: path.node.id.name,
+                    fileId,
+                    startLine: path.node.loc?.start.line ?? 0,
+                    endLine: path.node.loc?.end.line ?? 0,
+                    kind: 'function',
+                })
+            }
         },
 
         ClassDeclaration(path) {
-            if (!path.node.id) return
-            symbols.push({
-                name: path.node.id.name,
-                fileId,
-                startLine: path.node.loc!.start.line,
-                endLine: path.node.loc!.end.line,
-                kind: 'class'
-            })
-        }
+            if (path.node.id?.name) {
+                symbols.push({
+                    name: path.node.id.name,
+                    fileId,
+                    startLine: path.node.loc?.start.line ?? 0,
+                    endLine: path.node.loc?.end.line ?? 0,
+                    kind: 'class',
+                })
+            }
+        },
     })
 
     return symbols

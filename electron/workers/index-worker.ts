@@ -1,13 +1,13 @@
-import { parentPort } from 'node:worker_threads'
-import { IndexManager } from '../indexer/index-manager'
+// electron/workers/index-worker.ts
+import { parentPort } from 'worker_threads'
+import { indexManager } from '../indexer/index-manager'
 
-parentPort!.on('message', (paths: string[]) => {
-    const manager = new IndexManager()
-
-    if (!manager.loadFromDisk()) {
-        manager.build(paths)
-        manager.persist()
+parentPort?.on('message', (projectPaths: string[]) => {
+    try {
+        indexManager.build(projectPaths)
+        indexManager.persist()
+        parentPort?.postMessage({ ok: true })
+    } catch (err) {
+        parentPort?.postMessage({ ok: false, error: String(err) })
     }
-
-    parentPort!.postMessage('READY')
 })

@@ -1,5 +1,11 @@
 import Editor from '@monaco-editor/react'
 
+    // Disable Monaco SharedArrayBuffer usage in Electron dev
+    ; (self as any).MonacoEnvironment = {
+        getWorker: () => undefined,
+    }
+
+
 export function CodeClipboard({
     code,
     language

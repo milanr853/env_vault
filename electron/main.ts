@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'node:path'
+import './ipc'
+
 
 let win: BrowserWindow | null = null
 

@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
-import { indexManager } from '../state'
 import type { FileID } from '@shared/types'
+import { indexManager } from '../indexer/index-manager'
 
 ipcMain.handle(
     'code:extract',
