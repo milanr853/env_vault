@@ -1,9 +1,9 @@
-import { configureStore } from "@reduxjs/toolkit"
-import vaultReducer from "./vaultSlice"
+import { configureStore } from '@reduxjs/toolkit'
+import projectReducer from '../features/projects/projectSlice'
 
 export const store = configureStore({
     reducer: {
-        vault: vaultReducer
+        projects: projectReducer
     }
 })
 

@@ -10,11 +10,13 @@
         "jsx": "react-jsx",
         "strict": true,
         "skipLibCheck": true,
+        "isolatedModules": true,
         "types": [
             "vite/client"
-        ]
+        ],
     },
     "include": [
-        "src"
+        "src",
+        "shared"
     ]
 }

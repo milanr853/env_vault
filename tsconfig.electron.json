@@ -16,9 +16,4 @@
             "electron"
         ]
     },
-    "include": [
-        "electron.main.ts",
-        "preload.ts",
-        "src-main"
-    ]
 }
