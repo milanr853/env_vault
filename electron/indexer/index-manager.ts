@@ -21,10 +21,17 @@ class IndexManager {
             const files = scanFiles(root)
 
             for (const filePath of files) {
-                const code = fs.readFileSync(filePath, 'utf-8')
-                const stat = fs.statSync(filePath)
-                const lines = code.split('\n')
+                let code: string
+                let stat: fs.Stats
 
+                try {
+                    code = fs.readFileSync(filePath, 'utf-8')
+                    stat = fs.statSync(filePath)
+                } catch {
+                    continue
+                }
+
+                const lines = code.split('\n')
                 const fileId = this.nextFileId++
 
                 this.store.files.set(fileId, {
@@ -35,18 +42,31 @@ class IndexManager {
                     lines,
                 })
 
-                const symbols = extractSymbols(code, fileId)
+                let symbols = []
+
+                try {
+                    symbols = extractSymbols(code, fileId)
+                } catch {
+                    continue
+                }
 
                 for (const sym of symbols) {
-                    if (!this.store.symbolIndex.has(sym.name)) {
-                        this.store.symbolIndex.set(sym.name, [])
-                    }
-                    this.store.symbolIndex.get(sym.name)!.push(sym)
+                    const name = sym.name.toLowerCase()
 
-                    this._addToken(sym.name, fileId)
+                    if (!this.store.symbolIndex.has(name)) {
+                        this.store.symbolIndex.set(name, [])
+                    }
+
+                    this.store.symbolIndex.get(name)!.push(sym)
+                    this._addToken(name, fileId)
                 }
             }
         }
+        console.log(
+            '[INDEX] Sample symbols:',
+            [...this.store.symbolIndex.keys()].slice(0, 20)
+        )
+
     }
 
     private _addToken(token: string, fileId: number) {

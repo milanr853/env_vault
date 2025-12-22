@@ -4,6 +4,10 @@ import { detectLanguage } from './utils/lang'
 import type { SearchMatch } from '@shared/types'
 import { CodeClipboard } from './components/CodeClipboard'
 import { SearchResults } from './components/SearchResults'
+import { useDispatch, useSelector } from 'react-redux'
+import { addProjects } from './features/projects/projectSlice'
+import { Sidebar } from './layouts/Sidebar'
+
 
 export default function App() {
     const [query, setQuery] = useState('')
@@ -12,10 +16,19 @@ export default function App() {
     const [selected, setSelected] = useState<SearchMatch | null>(null)
     const [code, setCode] = useState('')
 
+    const dispatch = useDispatch()
+
     const importProjects = async () => {
         const paths = await window.api.selectFolders()
-        console.log('Selected project paths:', paths)
+        if (paths.length) {
+            dispatch(addProjects(paths))
+        }
     }
+
+    const projects = useSelector(
+        (state: any) => state.projects.projects
+    )
+
 
     const onSelect = async (item: SearchMatch) => {
         setSelected(item)
@@ -30,6 +43,7 @@ export default function App() {
     return (
         <div className="flex h-screen">
             {/* LEFT PANEL */}
+            <Sidebar />
             <div className="w-1/3 border-r p-4 space-y-3">
                 <button
                     onClick={importProjects}

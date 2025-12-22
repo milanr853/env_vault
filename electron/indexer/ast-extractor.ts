@@ -28,7 +28,6 @@ export function extractSymbols(
             allowReturnOutsideFunction: true,
         })
     } catch {
-        // 🚨 CRITICAL: skip unparsable file
         return []
     }
 
@@ -36,25 +35,46 @@ export function extractSymbols(
 
     traverse(ast, {
         FunctionDeclaration(path) {
-            if (path.node.id?.name) {
+            const name = path.node.id?.name
+            if (!name) return
+
+            symbols.push({
+                name,
+                fileId,
+                startLine: path.node.loc?.start.line ?? 0,
+                endLine: path.node.loc?.end.line ?? 0,
+                kind: 'function',
+            })
+        },
+
+        TSDeclareFunction(path) {
+            const name = path.node.id?.name
+            if (!name) return
+
+            symbols.push({
+                name,
+                fileId,
+                startLine: path.node.loc?.start.line ?? 0,
+                endLine: path.node.loc?.end.line ?? 0,
+                kind: 'function',
+            })
+        },
+
+        VariableDeclarator(path) {
+            const id = path.node.id
+            const init = path.node.init
+
+            if (
+                id.type === 'Identifier' &&
+                (init?.type === 'ArrowFunctionExpression' ||
+                    init?.type === 'FunctionExpression')
+            ) {
                 symbols.push({
-                    name: path.node.id.name,
+                    name: id.name,
                     fileId,
                     startLine: path.node.loc?.start.line ?? 0,
                     endLine: path.node.loc?.end.line ?? 0,
                     kind: 'function',
-                })
-            }
-        },
-
-        ClassDeclaration(path) {
-            if (path.node.id?.name) {
-                symbols.push({
-                    name: path.node.id.name,
-                    fileId,
-                    startLine: path.node.loc?.start.line ?? 0,
-                    endLine: path.node.loc?.end.line ?? 0,
-                    kind: 'class',
                 })
             }
         },

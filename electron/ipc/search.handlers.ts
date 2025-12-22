@@ -1,7 +1,27 @@
 import { ipcMain } from 'electron'
-import { searchIndex } from '../indexer/search-engine'
-import { indexManager } from '../indexer/index-manager'
+import { indexWorker } from './worker-instance'
 
 ipcMain.handle('search:query', (_, query: string) => {
-    return searchIndex(indexManager.store, query)
+    console.log('[SEARCH] query received:', query)
+
+    return new Promise((resolve, reject) => {
+        const onMessage = (msg: any) => {
+            if (msg.type === 'searchResult') {
+                indexWorker.off('message', onMessage)
+                resolve(msg.results)
+            }
+
+            if (msg.type === 'error') {
+                indexWorker.off('message', onMessage)
+                reject(new Error(msg.error))
+            }
+        }
+
+        indexWorker.on('message', onMessage)
+
+        indexWorker.postMessage({
+            type: 'search',
+            query,
+        })
+    })
 })

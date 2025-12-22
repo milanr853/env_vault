@@ -1,5 +1,8 @@
 export function trigrams(word: string): string[] {
-    const s = `__${word.toLowerCase()}__`
+    const w = word.toLowerCase().trim()
+    if (w.length < 3) return []
+
+    const s = `__${w}__`
     const out: string[] = []
 
     for (let i = 0; i < s.length - 2; i++) {

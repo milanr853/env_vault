@@ -1,19 +1,21 @@
 import { ipcMain, dialog } from 'electron'
-import { Worker } from 'node:worker_threads'
-import path from 'node:path'
+import { indexWorker } from './worker-instance'
 
-ipcMain.handle('fs:select-folders', async (): Promise<string[]> => {
-    const paths = dialog.showOpenDialogSync({
+ipcMain.handle('fs:select-folders', async () => {
+    console.log('[FS] select-folders handler invoked')
+
+    const result = await dialog.showOpenDialog({
         properties: ['openDirectory', 'multiSelections'],
     })
 
-    if (!paths?.length) return []
+    if (result.canceled || !result.filePaths.length) {
+        return []
+    }
 
-    const worker = new Worker(
-        path.join(__dirname, '../workers/index-worker.js')
-    )
+    indexWorker.postMessage({
+        type: 'build',
+        paths: result.filePaths,
+    })
 
-    worker.postMessage(paths)
-
-    return paths // return immediately → UI stays responsive
+    return result.filePaths
 })

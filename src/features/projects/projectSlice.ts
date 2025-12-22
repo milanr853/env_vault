@@ -1,16 +1,25 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { Project } from '../../../shared/models'
 
-const initialState: Project[] = []
+type ProjectState = {
+    projects: string[]
+}
+
+const initialState: ProjectState = {
+    projects: [],
+}
 
 const projectSlice = createSlice({
     name: 'projects',
     initialState,
     reducers: {
-        addProjects(state, action: PayloadAction<Project[]>) {
-            state.push(...action.payload)
-        }
-    }
+        addProjects(state, action: PayloadAction<string[]>) {
+            for (const path of action.payload) {
+                if (!state.projects.includes(path)) {
+                    state.projects.push(path)
+                }
+            }
+        },
+    },
 })
 
 export const { addProjects } = projectSlice.actions
