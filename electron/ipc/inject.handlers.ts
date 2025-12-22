@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
-import fs from 'node:fs'import path from 'node:path'
+import fs from 'node:fs';
+import path from 'node:path'
 type InjectPayload = {
     targetPath: string
     code: string
