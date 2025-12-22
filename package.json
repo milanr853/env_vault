@@ -14,6 +14,7 @@
         "dist": "electron-builder"
     },
     "devDependencies": {
+        "@tailwindcss/line-clamp": "^0.4.4",
         "@types/node": "^25.0.2",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",

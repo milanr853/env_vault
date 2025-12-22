@@ -1,44 +1,48 @@
-import { SearchMatch } from 'shared/types'
+import type { SearchMatch } from '@shared/types'
 import { FileIcon } from '../ui/FileIcon'
 
 export function SearchResults({
     results,
     onSelect,
-    disabled = false,
+    disabled,
 }: {
     results: SearchMatch[]
     onSelect: (item: SearchMatch) => void
     disabled?: boolean
 }) {
-    if (!results.length) {
-        return (
-            <div className="text-sm text-gray-400 px-2">
-                No results
-            </div>
-        )
-    }
-
     return (
-        <div className="space-y-1">
-            {results.map(r => (
+        <div className="space-y-2">
+            {results.map((r, i) => (
                 <div
                     key={`${r.fileId}-${r.startLine}`}
+                    style={{ animationDelay: `${i * 40}ms` }}
                     onClick={() => !disabled && onSelect(r)}
-                    className={`flex items-start gap-2 p-2 border rounded
-            ${disabled ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100 cursor-pointer'}
-          `}
+                    className={`flex gap-2 p-2 border rounded
+                    transition-all duration-200 ease-out
+                    animate-in fade-in slide-in-from-bottom-1
+                    ${disabled ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-100 cursor-pointer'}
+`}
                 >
-                    {/* Icon */}
-                    <div className="mt-1 w-5 flex justify-center">
+                    {/* 🔹 File icon */}
+                    <div className="shrink-0 pt-0.5">
                         <FileIcon path={r.filePath} />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                        <div className="font-mono text-sm truncate">
+                    {/* 🔹 Text container */}
+                    <div className="min-w-0 flex-1">
+                        {/* Function / symbol name */}
+                        <div
+                            className="font-mono text-sm font-semibold line-clamp-1"
+                            title={r.name}
+                        >
                             {r.name}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
+
+                        {/* File path */}
+                        <div
+                            className="text-xs text-gray-500 line-clamp-2"
+                            title={`${r.filePath}:${r.startLine}`}
+                        >
                             {r.filePath}:{r.startLine}
                         </div>
                     </div>

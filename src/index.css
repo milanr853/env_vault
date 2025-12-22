@@ -11,3 +11,28 @@ body,
 body {
   @apply bg-gray-50 text-gray-900 antialiased;
 }
+
+/* 🔥 Animation helpers */
+@layer utilities {
+  .animate-in {
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .slide-in-from-bottom-1 {
+    animation: slideUp 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0 }
+    to { opacity: 1 }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(4px) }
+    to { transform: translateY(0) }
+  }
+}

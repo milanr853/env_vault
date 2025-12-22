@@ -1,5 +1,7 @@
 export type FileID = number
 
+export type SymbolKind = 'function' | 'class' | 'variable' | 'component' | 'hook'
+
 export type FileMeta = {
     id: FileID
     path: string
@@ -13,7 +15,7 @@ export type SymbolEntry = {
     fileId: FileID
     startLine: number
     endLine: number
-    kind: 'function' | 'class' | 'variable' | 'component'
+    kind: SymbolKind
 }
 
 export type IndexStore = {
@@ -27,7 +29,7 @@ export type SearchMatch = {
     name: string
     fileId: FileID
     filePath: string
-    kind: 'function' | 'class' | 'variable' | 'component'
+    kind: SymbolKind
     startLine: number
     endLine: number
     score: number

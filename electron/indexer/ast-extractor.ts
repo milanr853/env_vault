@@ -38,12 +38,14 @@ export function extractSymbols(code: string, fileId: number): SymbolEntry[] {
                 const name = path.node.id?.name
                 if (!name) return
 
+                const kind = name.startsWith('use') ? 'hook' : 'function'
+
                 symbols.push({
                     name,
                     fileId,
                     startLine: path.node.loc?.start.line ?? 0,
                     endLine: path.node.loc?.end.line ?? 0,
-                    kind: 'function',
+                    kind,
                 })
             },
 
@@ -56,15 +58,32 @@ export function extractSymbols(code: string, fileId: number): SymbolEntry[] {
                     (init?.type === 'ArrowFunctionExpression' ||
                         init?.type === 'FunctionExpression')
                 ) {
+                    const name = id.name
+                    const kind = name.startsWith('use') ? 'hook' : 'function'
+
                     symbols.push({
                         name: id.name,
                         fileId,
                         startLine: path.node.loc?.start.line ?? 0,
                         endLine: path.node.loc?.end.line ?? 0,
-                        kind: 'function',
+                        kind,
                     })
                 }
             },
+
+            ClassDeclaration(path) {
+                const name = path.node.id?.name
+                if (!name) return
+
+                symbols.push({
+                    name,
+                    fileId,
+                    startLine: path.node.loc?.start.line ?? 0,
+                    endLine: path.node.loc?.end.line ?? 0,
+                    kind: 'class',
+                })
+            }
+
         })
     } catch (err) {
         console.warn('[AST] traverse failed partially, returning what we have')

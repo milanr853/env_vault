@@ -19,7 +19,7 @@ export function searchIndex(
                 name: sym.name,
                 fileId: sym.fileId,
                 filePath: store.files.get(sym.fileId)?.path ?? '',
-                kind: sym.kind,
+                kind: sym?.kind,
                 startLine: sym.startLine,
                 endLine: sym.endLine,
                 score: score(name, q),

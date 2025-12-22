@@ -7,7 +7,9 @@ import { SearchResults } from './components/SearchResults'
 import { useDispatch, useSelector } from 'react-redux'
 import { addProjects } from './features/projects/projectSlice'
 import { Sidebar } from './layouts/Sidebar'
+import { detectTech } from './ui/detectTech'
 
+const techs = ['all', 'react', 'node', 'python', 'php', 'rust', 'go', 'ruby']
 
 export default function App() {
     const [query, setQuery] = useState('')
@@ -16,6 +18,7 @@ export default function App() {
     const [selected, setSelected] = useState<SearchMatch | null>(null)
     const [code, setCode] = useState('')
     const [scanning, setScanning] = useState(false)
+    const [activeTech, setActiveTech] = useState('all')
 
     useEffect(() => {
         window.api.onScanStart(() => setScanning(true))
@@ -23,6 +26,11 @@ export default function App() {
     }, [])
 
     const dispatch = useDispatch()
+
+    const filteredResults =
+        activeTech === 'all'
+            ? results
+            : results.filter(r => detectTech(r.filePath) === activeTech)
 
     const importProjects = async () => {
         const paths = await window.api.selectFolders()
@@ -79,7 +87,23 @@ export default function App() {
                     onChange={(e) => setQuery(e.target.value)}
                 />
 
-                <SearchResults results={results} onSelect={onSelect} disabled={loading} />
+                {/* 🔹 Tech filter bar */}
+                <div className="flex gap-2 mb-2 flex-wrap">
+                    {techs.map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setActiveTech(t)}
+                            className={`text-xs px-2 py-1 rounded border ${activeTech === t
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+
+                <SearchResults results={filteredResults} onSelect={onSelect} disabled={loading} />
             </div>
 
             {/* RIGHT PANEL */}
