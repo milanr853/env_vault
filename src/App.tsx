@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearch } from './app/hooks'
 import { detectLanguage } from './utils/lang'
 import type { SearchMatch } from '@shared/types'
@@ -11,10 +11,16 @@ import { Sidebar } from './layouts/Sidebar'
 
 export default function App() {
     const [query, setQuery] = useState('')
-    const results = useSearch(query)
+    const { results, loading } = useSearch(query)
 
     const [selected, setSelected] = useState<SearchMatch | null>(null)
     const [code, setCode] = useState('')
+    const [scanning, setScanning] = useState(false)
+
+    useEffect(() => {
+        window.api.onScanStart(() => setScanning(true))
+        window.api.onScanEnd(() => setScanning(false))
+    }, [])
 
     const dispatch = useDispatch()
 
@@ -54,6 +60,18 @@ export default function App() {
                     Import Project Folder
                 </button>
 
+                <div className="h-6">
+                    <div
+                        className={`transition-opacity duration-300 ${scanning ? 'opacity-100' : 'opacity-0'
+                            }`}
+                    >
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            <span className="animate-pulse">Scanning project files…</span>
+                        </div>
+                    </div>
+                </div>
+
                 <input
                     className="w-full border rounded p-2"
                     placeholder="Search function / symbol"
@@ -61,7 +79,7 @@ export default function App() {
                     onChange={(e) => setQuery(e.target.value)}
                 />
 
-                <SearchResults results={results} onSelect={onSelect} />
+                <SearchResults results={results} onSelect={onSelect} disabled={loading} />
             </div>
 
             {/* RIGHT PANEL */}

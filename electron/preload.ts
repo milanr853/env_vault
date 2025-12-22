@@ -7,6 +7,12 @@ contextBridge.exposeInMainWorld('api', {
     search: (query: string) =>
         ipcRenderer.invoke('search:query', query),
 
+    onScanStart: (cb: () => void) =>
+        ipcRenderer.on('scan:start', cb),
+
+    onScanEnd: (cb: () => void) =>
+        ipcRenderer.on('scan:end', cb),
+
     extractCode: (
         fileId: number,
         start: number,
