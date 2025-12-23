@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import * as path from 'node:path'
 import './ipc'
+import { indexManager } from './indexer/index-manager'
 
 
 let win: BrowserWindow | null = null
@@ -36,7 +37,14 @@ function createWindow() {
     }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+    const loaded = indexManager.loadFromDisk()
+    if (loaded) {
+        console.log('[INDEX] Cache restored from disk')
+    }
+
+    createWindow()
+})
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()

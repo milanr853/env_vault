@@ -2,45 +2,43 @@ import { parentPort } from 'worker_threads'
 import { indexManager } from '../indexer/index-manager'
 import { searchIndex } from '../indexer/search-engine'
 
+// 🔑 restore cache ON WORKER START
+const loaded = indexManager.loadFromDisk()
+if (loaded) {
+    console.log('[WORKER] Index cache restored from disk')
+}
+
 parentPort?.on('message', (msg) => {
     try {
-        // 🔹 BUILD INDEX
+        if (msg.type === 'get-projects') {
+            parentPort!.postMessage({
+                type: 'projects',
+                projects: indexManager.getProjects(),
+            })
+        }
+
         if (msg.type === 'build') {
-            console.log('[WORKER] build:', msg.paths)
             indexManager.build(msg.paths)
             indexManager.persist()
 
             parentPort!.postMessage({
                 type: 'build:done',
+                projects: indexManager.getProjects(),
                 files: indexManager.store.files.size,
-                symbols: indexManager.store.symbolIndex.size,
             })
         }
 
-        // 🔹 SEARCH
         if (msg.type === 'search') {
-            console.log('[WORKER] search:', msg.query)
-
-            const results = searchIndex(
-                indexManager.store,
-                msg.query
-            )
-
-            parentPort!.postMessage({
-                type: 'search:result',
-                results,
-            })
+            const results = searchIndex(indexManager.store, msg.query)
+            parentPort!.postMessage({ type: 'search:result', results })
         }
 
-        // 🔹 CODE EXTRACT
         if (msg.type === 'code:extract') {
-            const { fileId, start, end } = msg
-            const file = indexManager.store.files.get(fileId)
-
+            const file = indexManager.store.files.get(msg.fileId)
             parentPort!.postMessage({
                 type: 'code:extract:result',
                 code: file
-                    ? file.lines.slice(start - 1, end).join('\n')
+                    ? file.lines.slice(msg.start - 1, msg.end).join('\n')
                     : '',
             })
         }

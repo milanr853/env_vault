@@ -21,12 +21,21 @@ export default function App() {
     const [scanning, setScanning] = useState(false)
     const [activeTech, setActiveTech] = useState('all')
 
+    const dispatch = useDispatch()
+
     useEffect(() => {
         window.api.onScanStart(() => setScanning(true))
         window.api.onScanEnd(() => setScanning(false))
     }, [])
 
-    const dispatch = useDispatch()
+    useEffect(() => {
+        window.api.getProjects().then((paths: string[]) => {
+            if (paths.length) {
+                dispatch(addProjects(paths))
+            }
+        })
+    }, [])
+
 
     const filteredResults =
         activeTech === 'all'

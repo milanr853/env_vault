@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
     search: (query: string) =>
         ipcRenderer.invoke('search:query', query),
 
+    getProjects: () => ipcRenderer.invoke('fs:get-projects'),
+
     onScanStart: (cb: () => void) =>
         ipcRenderer.on('scan:start', cb),
 
@@ -20,6 +22,5 @@ contextBridge.exposeInMainWorld('api', {
     ) => ipcRenderer.invoke('code:extract', fileId, start, end),
 
     injectCode: (targetPath: string, code: string) =>
-        ipcRenderer.invoke('code:inject', { targetPath, code })
-
+        ipcRenderer.invoke('code:inject', { targetPath, code }),
 })

@@ -5,6 +5,7 @@ import { trigrams } from './trigram'
 import type { IndexStore } from '@shared/types'
 
 const CACHE_PATH = 'index-cache.json'
+const PROJECTS_PATH = 'projects.json'
 
 class IndexManager {
     store: IndexStore = {
@@ -16,57 +17,75 @@ class IndexManager {
 
     private nextFileId = 1
 
-    build(projectPaths: string[]) {
-        for (const root of projectPaths) {
-            const files = scanFiles(root)
+    build(
+        projectPaths: string[],
+        onProgress?: (done: number, total: number) => void
+    ) {
+        const existing = new Set(this.getProjects())
+        const newProjects = projectPaths.filter(p => !existing.has(p))
 
-            for (const filePath of files) {
-                let code: string
-                let stat: fs.Stats
-
-                try {
-                    code = fs.readFileSync(filePath, 'utf-8')
-                    stat = fs.statSync(filePath)
-                } catch {
-                    continue
-                }
-
-                const lines = code.split('\n')
-                const fileId = this.nextFileId++
-
-                this.store.files.set(fileId, {
-                    id: fileId,
-                    path: filePath,
-                    size: stat.size,
-                    mtime: stat.mtimeMs,
-                    lines,
-                })
-
-                let symbols = []
-
-                try {
-                    symbols = extractSymbols(code, fileId)
-                } catch {
-                    continue
-                }
-
-                for (const sym of symbols) {
-                    const name = sym.name.toLowerCase()
-
-                    if (!this.store.symbolIndex.has(name)) {
-                        this.store.symbolIndex.set(name, [])
-                    }
-
-                    this.store.symbolIndex.get(name)!.push(sym)
-                    this._addToken(name, fileId)
-                }
-            }
+        if (newProjects.length === 0) {
+            console.log('[INDEX] No new projects to index')
+            return
         }
-        console.log(
-            '[INDEX] Sample symbols:',
-            [...this.store.symbolIndex.keys()].slice(0, 20)
-        )
 
+        let allFiles: string[] = []
+        for (const root of newProjects) {
+            allFiles.push(...scanFiles(root))
+        }
+
+        const total = allFiles.length
+        let done = 0
+
+        for (const filePath of allFiles) {
+            let code: string
+            let stat: fs.Stats
+
+            try {
+                code = fs.readFileSync(filePath, 'utf-8')
+                stat = fs.statSync(filePath)
+            } catch {
+                done++
+                onProgress?.(done, total)
+                continue
+            }
+
+            const lines = code.split('\n')
+            const fileId = this.nextFileId++
+
+            this.store.files.set(fileId, {
+                id: fileId,
+                path: filePath,
+                size: stat.size,
+                mtime: stat.mtimeMs,
+                lines,
+            })
+
+            let symbols: any = []
+            try {
+                symbols = extractSymbols(code, fileId)
+            } catch { }
+
+            for (const sym of symbols) {
+                const name = sym.name.toLowerCase()
+
+                if (!this.store.symbolIndex.has(name)) {
+                    this.store.symbolIndex.set(name, [])
+                }
+
+                this.store.symbolIndex.get(name)!.push(sym)
+                this._addToken(name, fileId)
+            }
+
+            done++
+            onProgress?.(done, total)
+        }
+
+        this.saveProjects([...existing, ...newProjects])
+        this.persist()
+
+        console.log('[INDEX] files:', this.store.files.size)
+        console.log('[INDEX] symbols:', this.store.symbolIndex.size)
     }
 
     private _addToken(token: string, fileId: number) {
@@ -84,14 +103,15 @@ class IndexManager {
     }
 
     persist() {
-        const serialized = JSON.stringify({
-            files: [...this.store.files],
-            tokenIndex: [...this.store.tokenIndex].map(([k, v]) => [k, [...v]]),
-            symbolIndex: [...this.store.symbolIndex],
-            trigramIndex: [...this.store.trigramIndex].map(([k, v]) => [k, [...v]]),
-        })
-
-        fs.writeFileSync(CACHE_PATH, serialized)
+        fs.writeFileSync(
+            CACHE_PATH,
+            JSON.stringify({
+                files: [...this.store.files],
+                tokenIndex: [...this.store.tokenIndex].map(([k, v]) => [k, [...v]]),
+                symbolIndex: [...this.store.symbolIndex],
+                trigramIndex: [...this.store.trigramIndex].map(([k, v]) => [k, [...v]]),
+            })
+        )
     }
 
     loadFromDisk() {
@@ -109,6 +129,15 @@ class IndexManager {
         )
 
         return true
+    }
+
+    getProjects(): string[] {
+        if (!fs.existsSync(PROJECTS_PATH)) return []
+        return JSON.parse(fs.readFileSync(PROJECTS_PATH, 'utf-8'))
+    }
+
+    saveProjects(projects: string[]) {
+        fs.writeFileSync(PROJECTS_PATH, JSON.stringify(projects, null, 2))
     }
 }
 
