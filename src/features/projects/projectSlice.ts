@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 type ProjectState = {
     projects: string[]
+    activeProject: string | null
 }
 
 const initialState: ProjectState = {
     projects: [],
+    activeProject: null,
 }
 
 const projectSlice = createSlice({
@@ -18,9 +20,18 @@ const projectSlice = createSlice({
                     state.projects.push(path)
                 }
             }
+
+            // auto-select first project if none selected
+            if (!state.activeProject && state.projects.length > 0) {
+                state.activeProject = state.projects[0]
+            }
+        },
+
+        setActiveProject(state, action: PayloadAction<string>) {
+            state.activeProject = action.payload
         },
     },
 })
 
-export const { addProjects } = projectSlice.actions
+export const { addProjects, setActiveProject } = projectSlice.actions
 export default projectSlice.reducer

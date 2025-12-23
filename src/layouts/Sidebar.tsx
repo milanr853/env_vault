@@ -1,9 +1,12 @@
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { FiFolder } from 'react-icons/fi'
+import { setActiveProject } from '../features/projects/projectSlice'
 
 export function Sidebar() {
-    const projects = useSelector(
-        (state: any) => state.projects.projects
+    const dispatch = useDispatch()
+
+    const { projects, activeProject } = useSelector(
+        (state: any) => state.projects
     )
 
     return (
@@ -21,20 +24,28 @@ export function Sidebar() {
             <ul className="space-y-1">
                 {projects.map((path: string) => {
                     const name = path.split('/').pop()
+                    const isActive = path === activeProject
 
                     return (
                         <li
                             key={path}
+                            onClick={() => dispatch(setActiveProject(path))}
                             title={path}
-                            className="
+                            className={`
                 flex items-center gap-2
                 px-2 py-1 rounded
-                text-sm text-gray-700
-                hover:bg-gray-100
-                cursor-default
-              "
+                text-sm cursor-pointer
+                transition
+                ${isActive
+                                    ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-500'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                }
+              `}
                         >
-                            <FiFolder className="text-gray-500 shrink-0" />
+                            <FiFolder
+                                className={`shrink-0 ${isActive ? 'text-blue-600' : 'text-blue-500'
+                                    }`}
+                            />
                             <span className="truncate">{name}</span>
                         </li>
                     )
