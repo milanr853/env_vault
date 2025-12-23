@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { FiFolder } from 'react-icons/fi'
+import { FiFolder, FiLayers } from 'react-icons/fi'
 import { setActiveProject } from '../features/projects/projectSlice'
 
 export function Sidebar() {
@@ -15,13 +15,28 @@ export function Sidebar() {
                 Imported Projects
             </h3>
 
-            {projects.length === 0 && (
-                <div className="text-xs text-gray-400">
-                    No projects imported
-                </div>
-            )}
-
             <ul className="space-y-1">
+                {/* 🔹 ALL PROJECTS OPTION */}
+                <li
+                    onClick={() => dispatch(setActiveProject(null))}
+                    className={`
+            flex items-center gap-2
+            px-2 py-1 rounded
+            text-sm cursor-pointer transition
+            ${activeProject === null
+                            ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-500'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }
+          `}
+                >
+                    <FiLayers
+                        className={`shrink-0 ${activeProject === null ? 'text-blue-600' : 'text-gray-500'
+                            }`}
+                    />
+                    <span className="truncate font-medium">All</span>
+                </li>
+
+                {/* 🔹 PROJECT LIST */}
                 {projects.map((path: string) => {
                     const name = path.split('/').pop()
                     const isActive = path === activeProject
@@ -34,8 +49,7 @@ export function Sidebar() {
                             className={`
                 flex items-center gap-2
                 px-2 py-1 rounded
-                text-sm cursor-pointer
-                transition
+                text-sm cursor-pointer transition
                 ${isActive
                                     ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-500'
                                     : 'text-gray-700 hover:bg-gray-100'
@@ -51,6 +65,12 @@ export function Sidebar() {
                     )
                 })}
             </ul>
+
+            {projects.length === 0 && (
+                <div className="text-xs text-gray-400 mt-2">
+                    No projects imported
+                </div>
+            )}
         </div>
     )
 }
