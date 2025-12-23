@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addProjects } from './features/projects/projectSlice'
 import { Sidebar } from './layouts/Sidebar'
 import { detectTech } from './ui/detectTech'
+import { FiFolderPlus } from 'react-icons/fi'
 
 const techs = ['all', 'react', 'node', 'python', 'php', 'rust', 'go', 'ruby']
 
@@ -63,9 +64,14 @@ export default function App() {
             <div className="w-1/3 border-r p-4 space-y-3">
                 <button
                     onClick={importProjects}
-                    className="w-full rounded bg-blue-600 text-white py-2 hover:bg-blue-700"
+                    className="
+    w-full rounded bg-blue-600 text-white py-2
+    hover:bg-blue-700
+    flex items-center justify-center gap-2
+  "
                 >
-                    Import Project Folder
+                    <FiFolderPlus size={18} />
+                    <span>Import Project Folder</span>
                 </button>
 
                 <div className="h-6">
