@@ -78,3 +78,6 @@ coverage/
 # =========================
 tmp/
 temp/
+
+index-cache.json
+projects.json
