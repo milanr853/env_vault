@@ -23,6 +23,10 @@ export default function App() {
 
     const dispatch = useDispatch()
 
+    const { projects, activeProject } = useSelector(
+        (state: any) => state.projects
+    )
+
     useEffect(() => {
         window.api.onScanStart(() => setScanning(true))
         window.api.onScanEnd(() => setScanning(false))
@@ -36,11 +40,20 @@ export default function App() {
         })
     }, [])
 
-
-    const filteredResults =
+    // 1️⃣ Filter by tech
+    const techFilteredResults =
         activeTech === 'all'
             ? results
             : results.filter(r => detectTech(r.filePath) === activeTech)
+
+    // 2️⃣ Filter by active project
+    const projectFilteredResults =
+        !activeProject
+            ? techFilteredResults
+            : techFilteredResults.filter(r =>
+                r.filePath.startsWith(activeProject)
+            )
+
 
     const importProjects = async () => {
         const paths = await window.api.selectFolders()
@@ -50,10 +63,6 @@ export default function App() {
             dispatch(addProjects(paths))
         }
     }
-
-    const projects = useSelector(
-        (state: any) => state.projects.projects
-    )
 
 
     const onSelect = async (item: SearchMatch) => {
@@ -118,7 +127,7 @@ export default function App() {
                     ))}
                 </div>
 
-                <SearchResults results={filteredResults} onSelect={onSelect} disabled={loading} />
+                <SearchResults results={projectFilteredResults} onSelect={onSelect} disabled={loading} />
             </div>
 
             {/* RIGHT PANEL */}

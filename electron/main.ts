@@ -29,7 +29,6 @@ function createWindow() {
             }, 300)
         })
 
-        win.webContents.openDevTools()
     } else {
         win.loadFile(
             path.join(__dirname, '../index.html')
