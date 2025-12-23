@@ -63,7 +63,7 @@ class IndexManager {
 
             let symbols: any = []
             try {
-                symbols = extractSymbols(code, fileId)
+                symbols = extractSymbols(code, fileId, filePath)
             } catch { }
 
             for (const sym of symbols) {
